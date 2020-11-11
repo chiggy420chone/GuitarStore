@@ -2,11 +2,30 @@ const express = require('express');
 const path = require('path');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
 const session = require('express-session');
 const app = express();
 
+//Set Configuration Keys
+const db = require('./configs/keys').MongoURI;
+
+//Connect to MongoDB Atlas
+mongoose.connect(db,{useNewUrlParser:true,useUnifiedTopology:true})
+  .then(function(){
+	      console.log("Connected to MongoDB Atlas");
+	    }).catch(function(err){
+		        console.log(err);
+	    });
+mongoose.set('useCreateIndex',true);
+mongoose.connection.on('open',function(){
+	  console.log("############################################");
+	  console.log("Mongoose connection opened on process "+process.pid);
+	  console.log("############################################");
+});
+
 //Set Routes
 const indexRoutes = require('./api/routes/');
+const adminRoutes = require('./api/routes/admins');
 
 //Middlewares
 app.use(logger('dev'));
@@ -34,6 +53,7 @@ app.use(function(req,res,next){
 
 //Routes
 app.use('/',indexRoutes);
+app.use('/admin',adminRoutes);
 app.use('/logout',function(req,res){
     req.logout();
     res.redirect('/');
